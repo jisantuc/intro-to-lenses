@@ -9,7 +9,7 @@ val someTeams = List(
       Employee(
         "Alice",
         List(
-          Skill("possum identification", false),
+          Skill("possums", false),
           Skill("terrifying martial arts", true)
         )
       ),
@@ -21,11 +21,12 @@ val someTeams = List(
         )
       )
     )
-  )
+  ),
+  Team("Inchoate Team", List.empty)
 )
 
 /** Tons of data copying, most of it pretty boilerplatey */
-def makePossumIdentificationCool(teams: List[Team]): List[Team] = teams match {
+def makePossumsCool(teams: List[Team]): List[Team] = teams match {
   case Nil => Nil
   case (team +: teams) =>
     team.copy(
@@ -38,21 +39,22 @@ def makePossumIdentificationCool(teams: List[Team]): List[Team] = teams match {
 }
 
 /** Better since it more specifically matches our intent, but still tons of boilerplatey data copying */
-def makePossumIdentificationCool2(teams: List[Team]): List[Team] = teams match {
+def makePossumsCool2(teams: List[Team]): List[Team] = teams match {
   case (Team(teamName,
              (Employee(employeeName,
-                       (Skill(skillName@"possum identification", false) +: tailSkills)) +: tailEmployees))
+                       (Skill(skillName@"possums", false) +: tailSkills)) +: tailEmployees))
           +: tailTeams) =>
     Team(teamName, (Employee(employeeName, (Skill(skillName, true) +: tailSkills)) +: tailEmployees)) +: tailTeams
   case teams => teams
 }
 
 println(someTeams)
-println(makePossumIdentificationCool(someTeams))
-println(makePossumIdentificationCool2(someTeams))
+println(makePossumsCool(someTeams))
+println(makePossumsCool2(someTeams))
 
 
 /** Lenses zone
+  // skip setting just the first element since it seems really hard
   import monocle.Lens
   import monocle.macros.GenLens
   import monocle.function._
@@ -61,3 +63,13 @@ println(makePossumIdentificationCool2(someTeams))
   val specialSkills: Lens[Employee, List[Skill]] = GenLens[Employee](_.specialSkills)
 
   */
+
+import monocle.{Lens, Traversal}
+import monocle.macros.GenLens
+import monocle.function.all._
+
+val teamMembers: Lens[Team, List[Employee]] = GenLens[Team](_.teamMembers)
+val specialSkills: Lens[Employee, List[Skill]] = GenLens[Employee](_.specialSkills)
+val coolLens: Lens[Skill, Boolean] = GenLens[Skill](_.isCool)
+
+val composed: Traversal[List[Team], List[Employee]] = each[List[Team], Team] composeLens teamMembers

@@ -50,11 +50,12 @@ data Team =
 someTeams :: [Team]
 someTeams =
   [ Team "Civic Apps"
-    [ Employee "Alice" [ Skill "possum identification" False
+    [ Employee "Alice" [ Skill "possums" False
                        , Skill "terrifying martial arts" True
                        ]
     , Employee "Arianna" [ Skill "making cents" False
                          , Skill "frisbee" True ]]
+  , Team "Inchoate Team" []
   ]
 ```
 
@@ -71,7 +72,7 @@ val someTeams = List(
       Employee(
         "Alice",
         List(
-          Skill("possum identification", false),
+          Skill("possums", false),
           Skill("terrifying martial arts", true)
         )
       ),
@@ -90,9 +91,39 @@ val someTeams = List(
 ## Some data in javascript
 
 ```javascript
-let someTeams = {
-  ...
-}
+let someTeams = [
+    {
+        name: 'Civic Apps',
+        employees: [
+            {
+                name: 'Alice',
+                skills: [
+                    {
+                        name: 'possums',
+                        isCool: false
+                    },
+                    {
+                        name: 'terrifying martial arts',
+                        isCool: true
+                    }
+                ]
+            },
+            {
+                name: 'Arianna',
+                skills: [
+                    {
+                        name: 'making cents',
+                        isCool: false
+                    },
+                    {
+                        name: 'frisbee',
+                        isCool: true
+                    }
+                ]
+            }
+        ]
+    }
+];
 ```
 
 ## How do we update a deeply nested field
@@ -103,9 +134,9 @@ let someTeams = {
 {- We're just going to make the first employee's first skill cool, to simplify things,
 and also do it unsafely -- again, for simplicity. This is the simple version
 -}
-makePossumIdentificationCool :: [Team] -> [Team]
-makePossumIdentificationCool [] = []
-makePossumIdentificationCool (team:teams) =
+makePossumsCool :: [Team] -> [Team]
+makePossumsCool [] = []
+makePossumsCool (team:teams) =
   (Team (_teamName team)
   $ (Employee (_employeeName . head . _teamMembers $ team)
      ((Skill ( _skillName . head . _specialSkills . head . _teamMembers $ team) True)
@@ -115,18 +146,18 @@ makePossumIdentificationCool (team:teams) =
 {- Similar, but we're more specifically going to match our intent, to show the insanity of the necessary
 pattern match
 -}
-makePossumIdentificationCool' :: [Team] -> [Team]
-makePossumIdentificationCool' ((Team teamName (Employee eName (headSkill@(Skill "possum identification" False):tailSkills):tailEs)):tailTeams) =
+makePossumsCool' :: [Team] -> [Team]
+makePossumsCool' ((Team teamName (Employee eName (headSkill@(Skill "possums" False):tailSkills):tailEs)):tailTeams) =
   (Team teamName
    $ Employee eName (Skill (_skillName headSkill) True : tailSkills) : tailEs) : tailTeams
-makePossumIdentificationCool' teams = teams
+makePossumsCool' teams = teams
 ```
 
 ## Without lenses -- scala
 
 ```scala
 /** Tons of data copying, most of it pretty boilerplatey */
-def makePossumIdentificationCool(teams: List[Team]): List[Team] = teams match {
+def makePossumsCool(teams: List[Team]): List[Team] = teams match {
   case Nil => Nil
   case (team +: teams) =>
     team.copy(
@@ -139,8 +170,8 @@ def makePossumIdentificationCool(teams: List[Team]): List[Team] = teams match {
 }
 
 /** Better since it more specifically matches our intent, but still tons of boilerplatey data copying */
-def makePossumIdentificationCool2(teams: List[Team]): List[Team] = teams match {
-  case (Team(teamName, (Employee(employeeName, (Skill(skillName@"possum identification", false) +: tailSkills)) +: tailEmployees)) +: tailTeams) =>
+def makePossumsCool2(teams: List[Team]): List[Team] = teams match {
+  case (Team(teamName, (Employee(employeeName, (Skill(skillName@"possums", false) +: tailSkills)) +: tailEmployees)) +: tailTeams) =>
     Team(teamName, (Employee(employeeName, (Skill(skillName, true) +: tailSkills)) +: tailEmployees)) +: tailTeams
   case teams => teams
 }
@@ -157,22 +188,23 @@ someTeams[0].employees[0].skills[0].isCool = true
 - not checking to make sure we're updating what we actually care about (for complexity reasons, but obviously that makes complexity worse)
 - lots of data copying
 - without the function name, we'd have no real way of knowing what the purpose of all that was by looking at it
-- in the javascript case, it's _extremely unsafe_ -- we could mistype any of those things, 
+- in the javascript case, it's _extremely unsafe_ -- we could mistype any of those things, and they wouldn't have item access or we could accidentally introduce a new property instead of updating the existing property or man who even knows
 
 # Updating the first team _with_ lenses
 
 ## With lenses
 
 - haskell and scala both let us derive lenses automatically because we live in a great future
+- ramda lives in a not-typesafe-by-default universe so writing lenses is easy
 - `monocle`: <monocle docs -- derivation>
 - `lens`: <lens / template haskell docs>
-- `ramda`? 
+- `ramda`: `R.compose(R.lensProp('foo'), R.lensIndex(n), R.lensProp('bar'))` 
 
 ## With lenses -- haskell
 
 ```haskell
-makePossumIdentificationCoolWithLens :: [Team] -> [Team]
-makePossumIdentificationCoolWithLens =
+makePossumsCoolWithLens :: [Team] -> [Team]
+makePossumsCoolWithLens =
   set (ix 0 . teamMembers . ix 0 . specialSkills . ix 0 . isCool) True
 ```
 
@@ -185,6 +217,19 @@ def someOperator(lens: Lens, lens: Lens): Lens = composeLens
 ```
 
 ## With lenses -- javascript
+
+# What happens if we lens onto something that's not there?
+
+## Haskell
+
+```haskell
+bogusLens :: [Team] -> [Skill]
+bogusLens = view (ix 1 . teamMembers . ix 99 . specialSkills . ix 0)
+```
+
+## Scala
+
+## Javascript
 
 ## Let's look at some types
 
