@@ -1,38 +1,43 @@
 ---
 title: Lenses
 author: James Santucci
+patat:
+    wrap: true
+    margins:
+        left: 20
+        right: 20
 ---
 
-TODO: set margins
+# TODO #
 
-# Patat
+- move js code to [`monocle-ts`](https://github.com/gcanti/monocle-ts)
 
-## Why patat
+# Patat #
 
-- ~because it's important that everyone work toward my goal of never needing something outside of a terminal again~
+> - because if you need to leave a terminal you're obviously not doing real work?
+> - no!
 - fully terminal based -> tmux or screen or whatever else you like
-- good backronym
+- good backronym -- *P*resentations *At*op the *A*NSI *T*erminal
 - french fries
 - styling!
 - tools are fun
 
-# Lenses
+# Lenses #
 
-## Ok but really "optics"
-
+> - But really "optics"
 > - There are a lot of kinds
 > - `Lens`, `Prism`, `Traversal`, ...
 > - but we don't really have to care about their fancy names, just what we can do with them
 > - but I'm still going to say "lenses" to stand in for optics
 
-## Why lenses
+# Why lenses #
 
 - lenses / prisms / traversals let us specify intent to view / modify data more clearly and concisely
 > - with composition
 > - and in a way that we'll be able to recognize after reading what we've written a while later
 > - no really I'll prove it
 
-## Some data in haskell
+# Some data in haskell #
 
 ```haskell
 data Skill =
@@ -59,7 +64,7 @@ someTeams =
   ]
 ```
 
-## Some data in scala
+# Some data in scala #
 
 ```scala
 case class Skill(skillName: String, isCool: Boolean)
@@ -88,7 +93,7 @@ val someTeams = List(
 )
 ```
 
-## Some data in javascript
+# Some data in javascript #
 
 ```javascript
 let someTeams = [
@@ -126,9 +131,9 @@ let someTeams = [
 ];
 ```
 
-## How do we update a deeply nested field
+# How do we update a deeply nested field #
 
-## Without lenses -- haskell
+# Without lenses -- haskell #
 
 ```haskell
 {- We're just going to make the first employee's first skill cool, to simplify things,
@@ -153,7 +158,7 @@ makePossumsCool' ((Team teamName (Employee eName (headSkill@(Skill "possums" Fal
 makePossumsCool' teams = teams
 ```
 
-## Without lenses -- scala
+# Without lenses -- scala #
 
 ```scala
 /** Tons of data copying, most of it pretty boilerplatey */
@@ -177,30 +182,30 @@ def makePossumsCool2(teams: List[Team]): List[Team] = teams match {
 }
 ```
 
-## Without lenses -- javascript
+# Without lenses -- javascript #
 ```javascript
 someTeams[0].employees[0].skills[0].isCool = true
 ```
 
-## Why's this bad
+# Why's this bad #
 
-> - :thinking_face:
+> - :thinking:
 - not checking to make sure we're updating what we actually care about (for complexity reasons, but obviously that makes complexity worse)
 - lots of data copying
 - without the function name, we'd have no real way of knowing what the purpose of all that was by looking at it
 - in the javascript case, it's _extremely unsafe_ -- we could mistype any of those things, and they wouldn't have item access or we could accidentally introduce a new property instead of updating the existing property or man who even knows
 
-# Updating the first team _with_ lenses
+# Updating the first team _with_ lenses #
 
-## With lenses
+# With lenses #
 
 - haskell and scala both let us derive lenses automatically because we live in a great future
 - ramda lives in a not-typesafe-by-default universe so writing lenses is easy
-- `monocle`: <monocle docs -- derivation>
-- `lens`: <lens / template haskell docs>
-- `ramda`: `R.compose(R.lensProp('foo'), R.lensIndex(n), R.lensProp('bar'))` 
+- `monocle`: http://julien-truffaut.github.io/Monocle/
+- `lens`: http://hackage.haskell.org/package/lens
+- `ramda`: `R.compose(R.lensProp('foo'), R.lensIndex(n), R.lensProp('bar'))`
 
-## With lenses -- haskell
+# With lenses -- haskell #
 
 ```haskell
 makePossumsCoolWithLens :: [Team] -> [Team]
@@ -208,35 +213,41 @@ makePossumsCoolWithLens =
   set (ix 0 . teamMembers . ix 0 . specialSkills . ix 0 . isCool) True
 ```
 
-## With lenses -- scala
+# With lenses -- scala #
 
 ```scala
-def someOperator(lens: Lens, lens: Lens): Lens = composeLens
 
 ...
 ```
 
-## With lenses -- javascript
+# With lenses -- javascript #
 
-# What happens if we lens onto something that's not there?
+# What happens if we lens onto something that's not there? #
 
-## Haskell
+# Haskell #
 
 ```haskell
 bogusLens :: [Team] -> [Skill]
 bogusLens = view (ix 1 . teamMembers . ix 99 . specialSkills . ix 0)
 ```
 
-## Scala
+Can we do the following?
 
-## Javascript
+```haskell
+bogusLens :: [Team] -> Skill
+bogusLens = view (ix 1 . teamMembers . ix 99 . specialSkills . ix 0)
+```
 
-## Let's look at some types
+# Scala #
+
+# Javascript #
+
+# Let's look at some types #
 
 - this is a bad idea
 - include Edward Kmett quote here to prove it
 
-## Requirements changed
+# Requirements changed #
 
 - we don't want to create a culture of contempt, so we believe everyone that the special skills they have are really cool
 - so we want to update all of the skills
@@ -244,3 +255,5 @@ bogusLens = view (ix 1 . teamMembers . ix 99 . specialSkills . ix 0)
 > - we'd probably make some helper function for updating a team then map
 > - but that just moves the mess somewhere else
 > - we've all been in the position of "oh this looks simple I wonder what this nice-looking helper function does -- oh no"
+
+# Where can I see lenses in the wild? #
