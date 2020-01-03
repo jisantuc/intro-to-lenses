@@ -1,3 +1,6 @@
+import $ivy.`com.github.julien-truffaut::monocle-core:2.0.0`
+import $ivy.`com.github.julien-truffaut::monocle-macro:2.0.0`
+
 case class Skill(skillName: String, isCool: Boolean)
 case class Employee(employeeName: String, specialSkills: List[Skill])
 case class Team(teamName: String, teamMembers: List[Employee])
